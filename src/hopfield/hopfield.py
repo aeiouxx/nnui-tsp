@@ -141,7 +141,7 @@ class HopfieldNetwork:
 
     def _decode_tour(self):
         decoded_tour = []
-        activations = self._activations()  # Get the current activations of all neurons
+        activations = self._activations()
         self.logger.info(f"Activations:\n{activations}")
         tour = np.argmax(activations, axis=0)
         if len(set(tour)) != self.size:
