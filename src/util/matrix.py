@@ -67,3 +67,17 @@ def format_distance_matrix(distance_matrix: np.ndarray, cities: List[City]) -> s
         matrix_str += f"{row_label}  {distances}\n"
 
     return matrix_str
+
+
+def format_matrix(matrix: np.ndarray) -> str:
+    if matrix.ndim != 2:
+        raise ValueError("The matrix must be 2-dimensional")
+    max_element_length = max(len(f"{elem:.3f}") for elem in np.nditer(matrix))
+    column_width = max(max_element_length, 10)  # Adjust 10 as minimum width if needed
+    header = "Index   " + ''.join(f"{idx:>{column_width}}  " for idx in range(matrix.shape[1]))
+    rows = [header]
+    # Format each row in the matrix
+    for i, row in enumerate(matrix):
+        formatted_row = f"{i:5}   " + ''.join(f"{elem:>{column_width}.3f}  " for elem in row)
+        rows.append(formatted_row)
+    return '\n'.join(rows)

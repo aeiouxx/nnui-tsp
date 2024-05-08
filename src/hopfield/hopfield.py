@@ -1,4 +1,5 @@
 import logging
+import sys
 from dataclasses import dataclass
 from typing import List
 
@@ -54,7 +55,7 @@ class HopfieldNetwork:
         self.logger.info(
             f"\n----Network configuration: A={self.A}, B={self.B}, C={self.C}, D={self.D}, u0={self.u0}, step={self.step}, seed={self.seed}\n"
             f"----Distance matrix:\n{util.matrix.format_distance_matrix(self.distance_matrix, self.cities)}"
-            f"----Neuronal inputs:\n{self.neurons}")
+            f"----Neuronal inputs:\n{util.matrix.format_matrix(self.neurons)}")
 
     def _normalize_distance_matrix(self, distance_matrix: np.ndarray) -> np.ndarray:
         self.logger.debug(
@@ -102,7 +103,7 @@ class HopfieldNetwork:
             for position in range(self.size):
                 input_change[city, position] = self.step * self._get_change(city, position)
         self.neurons += input_change
-        self.logger.debug(f"Updated neurons:\n{self.neurons}")
+        self.logger.debug(f"Updated neurons:\n{util.matrix.format_matrix(self.neurons)}")
         pass
 
     def _get_change(self, city: int, position: int) -> float:
@@ -142,14 +143,12 @@ class HopfieldNetwork:
     def _decode_tour(self):
         decoded_tour = []
         activations = self._activations()
-        self.logger.info(f"Activations:\n{activations}")
+        self.logger.info(f"Activations:\n{util.matrix.format_matrix(activations)}")
         tour = np.argmax(activations, axis=0)
         if len(set(tour)) != self.size:
             self.logger.warning("Failed to decode a valid TSP tour.")
             return None
-        for position in range(self.size):
-            decoded_tour.append(self.cities[tour[position]].name)
-        return decoded_tour
+        return tour
 
     def run(self, max_iterations: int = 1000):
         self.logger.info("Running Hopfield network")
@@ -159,10 +158,10 @@ class HopfieldNetwork:
             current_energy = self._energy()
             if self.logger.level < logging.INFO:
                 self.logger.debug(f"Energy: {current_energy}, Iteration: {i}")
-            else:
+            elif i % 100 == 0:
                 self.logger.info(f"Energy: {current_energy}, Iteration: {i}")
         tour = self._decode_tour()
-        if tour:
+        if tour is not None:
             self.logger.info(f"Successfully decoded TSP tour: {[city for city in tour]}")
         else:
             self.logger.info("Failed to decode a valid TSP tour.")
