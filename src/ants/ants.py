@@ -9,8 +9,13 @@ from src.util.matrix import City
 
 @dataclass
 class AntSetup:
+    # Pheromone importance
     alpha: float = 1
+    # Heuristic importance
     beta: float = 2
+    # Small value to avoid division by zero
+    epsilon: float = 1e-10
+    # Pheromone decay rate
     decay: float = 0.95
     ant_count: int = 10
     iterations: int = 100
@@ -26,6 +31,7 @@ class Ants:
         self.distances = distances
         self.alpha = setup.alpha
         self.beta = setup.beta
+        self.epsilon = setup.epsilon
         self.decay = setup.decay
         self.ant_count = setup.ant_count
         self.pheromones = np.ones_like(distances)
@@ -36,8 +42,8 @@ class Ants:
         route[0] = random.randint(0, self.size - 1)
         visited = set([route[0]])
         for i in range(1, self.size):
-            last = route[i - 1]
-            probabilities = self._calculate_probabilities(last, visited)
+            current_city = route[i - 1]
+            probabilities = self._calculate_probabilities(current_city, visited)
             next_city = self._roulette(probabilities)
             route[i] = next_city
             visited.add(next_city)
@@ -46,10 +52,11 @@ class Ants:
 
     def _calculate_probabilities(self, current, visited):
         pheromone = np.power(self.pheromones[current], self.alpha)
-        dont_divide_by_zero_please = 0.1
-        heuristic = np.power(1.0 / (self.distances[current] + dont_divide_by_zero_please), self.beta)
-        mask = np.isin(np.arange(self.size), list(visited), invert=True)
-        probabilities = pheromone * heuristic * mask
+        # Heuristic is the inverse of the distance, epsilon to avoid division by zero, large heuristic value is
+        # irrelevant because the city is already visited and will not be selected
+        heuristic = np.power(1.0 / (self.distances[current] + self.epsilon), self.beta)
+        visited_mask = np.isin(np.arange(self.size), list(visited), invert=True)
+        probabilities = pheromone * heuristic * visited_mask
         return probabilities / probabilities.sum()
 
     def _roulette(self, probabilities):

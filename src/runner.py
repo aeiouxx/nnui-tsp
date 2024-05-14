@@ -50,6 +50,5 @@ def main():
     else:
         print("Genetic algorithm somehow managed to fail at finding a route")
 
-
 if __name__ == '__main__':
     main()
